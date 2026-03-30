@@ -2,12 +2,18 @@ import User from "../model/User.js";
 import HttpError from "../middleware/HttpError.js";
 import jwt from "jsonwebtoken";
 
-const generateToken = (user) => {
-  return jwt.sign(
+const generateToken = async (user) => {
+  const token = jwt.sign(
     { userId: user._id, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: "1d" },
   );
+
+  user.tokens = user.tokens.concat({ token });
+
+  await user.save();
+
+  return token;
 };
 
 const add = async (req, res, next) => {
@@ -45,4 +51,32 @@ const login = async (req, res, next) => {
   }
 };
 
-export default { add, login };
+const logOut = async (req, res, next) => {
+  try {
+    req.user.tokens = req.user.tokens.filter((t) => t.token !== req.token);
+    await req.user.save();
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    next(new HttpError(error.message, 500));
+  }
+};
+
+const logoutAll = async (req, res, next) => {
+  try {
+    req.user.tokens = [];
+
+    await req.user.save();
+
+    res.json({
+      success: true,
+      message: "Logged out from all devices",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export default { add, login, logOut, logoutAll };

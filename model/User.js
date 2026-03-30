@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import { timeStamp } from "node:console";
-
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -34,6 +32,14 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    tokens: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
   },
   {
     timestamps: true,
@@ -65,6 +71,18 @@ userSchema.statics.findByCredentials = async function (email, password) {
   } catch (error) {
     console.log(error);
   }
+};
+
+userSchema.methods.toJSON = function () {
+  const user = this.toObject();
+
+  delete user.password;
+  delete user.tokens;
+  delete user.__v;
+  delete user.createdAt;
+  delete user.updatedAt;
+
+  return user;
 };
 
 const userModel = mongoose.model("user", userSchema);

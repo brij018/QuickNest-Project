@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.post("/register", validate(registerSchema), userManager.add);
 
-router.get("/login", userManager.login);
+router.post("/login", auth, userManager.login);
 
 router.get("/profile", auth, (req, res) => {
   res.json({
@@ -18,5 +18,8 @@ router.get("/profile", auth, (req, res) => {
     user: req.user,
   });
 });
+
+router.post("/logOut", auth, userManager.logOut);
+router.post("/logOutAll", auth, userManager.logoutAll);
 
 export default router;
