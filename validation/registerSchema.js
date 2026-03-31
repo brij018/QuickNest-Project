@@ -6,7 +6,7 @@ const registerSchema = Joi.object({
     "string.empty": "name is requires",
     "string.min": "Name must be at least 2 characters long",
   }),
-  email: Joi.string().email.required().messages({
+  email: Joi.string().required().messages({
     "string.email": "invalid email format",
     "string.empty": "email is required",
   }),

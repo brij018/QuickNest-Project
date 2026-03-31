@@ -25,6 +25,7 @@ const add = async (req, res, next) => {
       password,
       phone,
       role,
+      cloudinaryId: req.file?.path,
     };
     const user = new User(newUser);
     await user.save();
@@ -75,8 +76,20 @@ const logoutAll = async (req, res, next) => {
       message: "Logged out from all devices",
     });
   } catch (error) {
-    next(error);
+    next(new HttpError(error.message, 500));
   }
 };
 
-export default { add, login, logOut, logoutAll };
+const allUsers = async (req, res, next) => {
+  try {
+    const users = await User.find({});
+    if (users.length === 0) {
+      return res.json({ success: false, message: "No user found" });
+    }
+    res.status(200).json({ success: true, users });
+  } catch (error) {
+    next(new HttpError(error.message, 500));
+  }
+};
+
+export default { add, login, logOut, logoutAll, allUsers };
