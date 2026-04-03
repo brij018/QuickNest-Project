@@ -11,7 +11,7 @@ const router = express.Router();
 
 router.post(
   "/register",
-  upload.single("cloudinaryId"),
+  upload.single("profilePic"),
   validate(registerSchema),
   userManager.add,
 );
@@ -29,5 +29,7 @@ router.get("/profile", auth, (req, res) => {
 router.post("/logOut", auth, userManager.logOut);
 router.post("/logOutAll", auth, userManager.logoutAll);
 router.get("/allUser", auth, checkRole("admin"), userManager.allUsers);
+router.patch("/update", upload.single("profilePic"), auth, userManager.update);
+router.delete("/delete", auth, userManager.deleteUser);
 
 export default router;

@@ -25,7 +25,8 @@ const add = async (req, res, next) => {
       password,
       phone,
       role,
-      cloudinaryId: req.file?.path,
+      profilePic: req.file ? req.file.path : "undefined",
+      cloudinaryId: req.file ? req.file.filename : "undefined",
     };
     const user = new User(newUser);
     await user.save();
@@ -92,4 +93,51 @@ const allUsers = async (req, res, next) => {
   }
 };
 
-export default { add, login, logOut, logoutAll, allUsers };
+const deleteUser = async (req, res, next) => {
+  try {
+    const user = req.user;
+    await User.deleteOne(user);
+    await cloudinary.uploader.destroy(user.cloudinaryId);
+    res
+      .status(200)
+      .json({ success: true, message: "user deleted successfully" });
+  } catch (error) {
+    next(new HttpError(error.message, 500));
+  }
+};
+
+const update = async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return next(new HttpError("user not found", 404));
+    }
+    const updates = Object.keys(req.body);
+
+    const allowedFields = ["name", "password", "phone"];
+
+    const isValid = updates.every((field) => allowedFields.includes(field));
+
+    if (!isValid) {
+      return next(new HttpError("only allowed field can be updated", 400));
+    }
+
+    updates.forEach((update) => (user[update] = req.body[update]));
+
+    if (req.file) {
+      await cloudinary.uploader.destroy(user.cloudinaryId);
+      user.profilePic = req.file.path;
+      user.cloudinaryId = req.file.filename;
+    }
+
+    await user.save();
+
+    res
+      .status(200)
+      .json({ success: true, message: "user Data updated successfully", user });
+  } catch (error) {
+    next(new HttpError(error.message));
+  }
+};
+
+export default { add, login, logOut, logoutAll, allUsers, deleteUser, update };
