@@ -39,7 +39,7 @@ const updateUserData = async (req, res, next) => {
     if (!isValid) {
       return next(new HttpError("only allowed field can be updated", 400));
     }
-    updates.forEach((update) => (update[update] = req.body[update]));
+    updates.forEach((update) => (user[update] = req.body[update]));
     if (req.file) {
       await cloudinary.uploader.destroy(user.cloudinaryId);
       user.profilePic = req.file.path;
