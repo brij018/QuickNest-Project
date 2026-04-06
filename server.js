@@ -29,7 +29,7 @@ app.use((error, req, res, next) => {
     return next(error);
   }
   res
-    .status(error.status || 500)
+    .status(error.statusCode || 500)
     .json(error.message || "Internal server error");
 });
 

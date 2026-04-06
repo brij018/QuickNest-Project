@@ -12,7 +12,7 @@ const validate = (schema) => (req, res, next) => {
     req.body = value;
     next();
   } catch (error) {
-    throw new Error(error.message);
+    next(new HttpError(error.message, 500));
   }
 };
 

@@ -1,6 +1,7 @@
 import User from "../model/User.js";
 import HttpError from "../middleware/HttpError.js";
 import jwt from "jsonwebtoken";
+import cloudinary from "../config/cloudinary.js";
 
 const generateToken = async (user) => {
   const token = jwt.sign(
@@ -25,12 +26,12 @@ const add = async (req, res, next) => {
       password,
       phone,
       role,
-      profilePic: req.file ? req.file.path : "undefined",
-      cloudinaryId: req.file ? req.file.filename : "undefined",
+      profilePic: req.file?.path,
+      cloudinaryId: req.file?.filename,
     };
+    console.log("cloudinaryId", newUser.cloudinaryId);
     const user = new User(newUser);
     await user.save();
-
     res.status(201).json({ success: true, user });
   } catch (error) {
     next(new HttpError(error.message, 500));
@@ -42,7 +43,7 @@ const login = async (req, res, next) => {
     const { email, password } = req.body;
 
     const user = await User.findByCredentials(email, password);
-
+    const token = await generateToken(user);
     if (!user) {
       return next(new HttpError("unable to login!!"));
     }
@@ -114,7 +115,7 @@ const update = async (req, res, next) => {
     }
     const updates = Object.keys(req.body);
 
-    const allowedFields = ["name", "password", "phone"];
+    const allowedFields = ["name", "password", "phone", "profilePic"];
 
     const isValid = updates.every((field) => allowedFields.includes(field));
 
@@ -136,7 +137,7 @@ const update = async (req, res, next) => {
       .status(200)
       .json({ success: true, message: "user Data updated successfully", user });
   } catch (error) {
-    next(new HttpError(error.message));
+    next(new HttpError(error.message, 500));
   }
 };
 

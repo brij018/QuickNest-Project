@@ -1,9 +1,10 @@
 import User from "../model/User.js";
 import HttpError from "../middleware/HttpError.js";
+import cloudinary from "../config/cloudinary.js";
 
 const deleteUser = async (req, res, next) => {
   try {
-    const id = req.param.id;
+    const id = req.params.id;
     const user = await User.findByIdAndDelete(id);
 
     await cloudinary.uploader.destroy(user.cloudinaryId);

@@ -6,7 +6,7 @@ const userSchema = Joi.object({
     "string.empty": "name is requires",
     "string.min": "Name must be at least 2 characters long",
   }),
-  email: Joi.string().label("Email").messages({
+  email: Joi.string().email().label("Email").messages({
     "string.email": "invalid email format",
     "string.empty": "email is required",
   }),
@@ -26,6 +26,9 @@ const userSchema = Joi.object({
       "string.pattern.base": "Phone number must be exactly 10 digits",
       "string.empty": "Phone number is required",
     }),
+  profilePic: Joi.string().label("profilePic").messages({
+    "string.base": "url must be in string format",
+  }),
   role: Joi.string()
     .valid("customer", "provider", "admin")
     .default("customer")
