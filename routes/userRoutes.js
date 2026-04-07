@@ -14,22 +14,8 @@ const router = express.Router();
 
 router.post(
   "/register",
-  (req, res, next) => {
-    console.log("STEP 1: ROUTE HIT");
-    next();
-  },
   upload.single("profilePic"),
-  (req, res, next) => {
-    console.log("STEP 2: AFTER MULTER");
-    console.log("FILE:", req.file);
-    console.log("BODY:", req.body);
-    next();
-  },
   validate(createUserSchema),
-  (req, res, next) => {
-    console.log("STEP 3: AFTER VALIDATION");
-    next();
-  },
   userManager.add,
 );
 
