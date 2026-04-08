@@ -5,7 +5,7 @@ const serviceSchema = Joi.object({
     "String.base": "name must be a string",
     "string.empty": "name is requires",
   }),
-  price: Joi.number().trim().label("Price").messages({
+  price: Joi.number().label("Price").messages({
     "Number.base": "Price must be a number",
     "Number.empty": "price is necessary",
   }),

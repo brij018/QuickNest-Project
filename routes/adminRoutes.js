@@ -4,11 +4,16 @@ import auth from "../middleware/auth.js";
 import checkRole from "../middleware/roleAccess.js";
 import userManager from "../controller/userController.js";
 import categoryManager from "../controller/categoryController.js";
+import serviceManager from "../controller/categoryController.js";
 import validate from "../middleware/validate.js";
 import {
   createCategorySchema,
   updateCategorySchema,
-} from "../validation/categotySchema.js";
+} from "../validation/categorySchema.js";
+import {
+  createServiceSchema,
+  updateServiceSchema,
+} from "../validation/serviceSchema.js";
 
 const router = express.Router();
 
@@ -24,6 +29,13 @@ router.post(
   checkRole("admin"),
   validate(createCategorySchema),
   categoryManager.add,
+);
+router.post(
+  "/addService",
+  auth,
+  checkRole("admin"),
+  validate(createServiceSchema),
+  serviceManager.add,
 );
 router.get(
   "/getAllCategory",
