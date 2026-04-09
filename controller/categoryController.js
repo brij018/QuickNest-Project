@@ -62,7 +62,7 @@ const updateCategory = async (req, res, next) => {
 
 const getAllCategories = async (req, res, next) => {
   try {
-    const categories = await Category.find();
+    const categories = await Category.find().populate("Service");
 
     res.status(200).json({
       success: true,

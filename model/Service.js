@@ -1,4 +1,3 @@
-import { string } from "joi";
 import mongoose from "mongoose";
 
 const serviceSchema = new mongoose.Schema(
@@ -17,7 +16,7 @@ const serviceSchema = new mongoose.Schema(
       required: true,
     },
     description: {
-      type: string,
+      type: String,
     },
     category: {
       type: mongoose.Schema.Types.ObjectId,

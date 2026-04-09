@@ -4,7 +4,7 @@ import auth from "../middleware/auth.js";
 import checkRole from "../middleware/roleAccess.js";
 import userManager from "../controller/userController.js";
 import categoryManager from "../controller/categoryController.js";
-import serviceManager from "../controller/categoryController.js";
+import serviceManager from "../controller/serviceController.js";
 import validate from "../middleware/validate.js";
 import {
   createCategorySchema,
@@ -38,10 +38,16 @@ router.post(
   serviceManager.add,
 );
 router.get(
-  "/getAllCategory",
+  "/getAllCategories",
   auth,
   checkRole("admin"),
   categoryManager.getAllCategories,
+);
+router.get(
+  "/getAllServices",
+  auth,
+  checkRole("admin"),
+  serviceManager.getAllServices,
 );
 router.patch(
   "/updateCategory/:id",
@@ -50,11 +56,24 @@ router.patch(
   validate(updateCategorySchema),
   categoryManager.updateCategory,
 );
+router.patch(
+  "/updateService/:id",
+  auth,
+  checkRole("admin"),
+  validate(updateServiceSchema),
+  serviceManager.updateService,
+);
 router.delete(
   "/deleteCategory/:id",
   auth,
   checkRole("admin"),
   categoryManager.deleteCategory,
+);
+router.delete(
+  "/deleteService/:id",
+  auth,
+  checkRole("admin"),
+  serviceManager.deleteService,
 );
 
 export default router;

@@ -48,7 +48,7 @@ const login = async (req, res, next) => {
       return next(new HttpError("unable to login!!"));
     }
 
-    res.status(200).json({ success: true, user });
+    res.status(200).json({ success: true, user, token });
   } catch (error) {
     next(new HttpError(error.message, 500));
   }
