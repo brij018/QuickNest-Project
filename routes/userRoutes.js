@@ -1,11 +1,12 @@
 import express from "express";
-
+import bookingManager from "../controller/bookingCategory.js";
 import userManager from "../controller/userController.js";
 import validate from "../middleware/validate.js";
 import {
   createUserSchema,
   updateUserSchema,
 } from "../validation/registerSchema.js";
+import { createBookingSchema } from "../validation/bookingSchema.js";
 import auth from "../middleware/auth.js";
 import checkRole from "../middleware/roleAccess.js";
 import upload from "../middleware/upload.js";
@@ -40,5 +41,15 @@ router.patch(
   userManager.update,
 );
 router.delete("/delete", auth, userManager.deleteUser);
+
+router.post(
+  "/createBooking",
+  auth,
+  validate(createBookingSchema),
+  bookingManager.add,
+);
+
+router.get("/getAllBookings", auth, bookingManager.getAllBookings);
+router.delete("/deleteBooking", auth, bookingManager.deleteBooking);
 
 export default router;
