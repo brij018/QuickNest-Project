@@ -8,6 +8,7 @@ import connectDB from "./config/db.js";
 import HttpError from "./middleware/HttpError.js";
 import userRouter from "./routes/userRoutes.js";
 import adminRouter from "./routes/adminRoutes.js";
+import bookingRouter from "./routes/bookingRoutes.js";
 
 const app = express();
 app.use(express.json());
@@ -15,6 +16,7 @@ app.set("view engine", "ejs");
 
 app.use("/user", userRouter);
 app.use("/admin", adminRouter);
+app.use("/booking", bookingRouter);
 
 app.get("/", (req, res) => {
   res.render("home");

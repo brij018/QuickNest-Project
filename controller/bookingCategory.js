@@ -100,15 +100,38 @@ const deleteBooking = async (req, res, next) => {
 
 const getAllBookings = async (req, res, next) => {
   try {
-    const userId = req.user._id;
+    let bookings;
 
-    const bookings = await Booking.find({ userId })
-      .populate("serviceId")
-      .populate("userId")
-      .sort({ bookingDate: -1 });
+    const role = req.user.role;
+
+    if (role === "admin") {
+      bookings = await Booking.find({}).populate([
+        {
+          path: "serviceId",
+          select: "name price duration notes",
+        },
+        {
+          path: "userId",
+          service: "name email phone",
+        },
+      ]);
+    } else if (role === "customer") {
+      bookings = await Booking.find({ userId: req.user._id }).populate(
+        "serviceId",
+        "name price duration notes",
+      );
+    } else {
+      return next(new HttpError("unAuthorized access", 401));
+    }
+    if (bookings.length === 0) {
+      return res
+        .status(200)
+        .json({ success: true, message: "no booking data found" });
+    }
 
     res.status(200).json({
       success: true,
+      message: "all bookings fetched",
       bookings,
     });
   } catch (error) {
@@ -116,4 +139,49 @@ const getAllBookings = async (req, res, next) => {
   }
 };
 
-export default { add, deleteBooking, getAllBookings };
+const getAllBookingsByServiceId = async (req, res, next) => {
+  try {
+    let bookings;
+
+    const role = req.user.role;
+
+    if (role === "admin") {
+      bookings = await Booking.find({ serviceId: req.params.id }).populate([
+        {
+          path: "serviceId",
+          service: "name price duration notes",
+        },
+        {
+          path: "userId",
+          service: "name email phone",
+        },
+      ]);
+    } else if (role === "customer") {
+      bookings = await Booking.find({
+        serviceId: req.params.id,
+        userId: req.user._id,
+      }).populate("serviceId", "name price duration notes");
+    } else {
+      return next(new HttpError("unAuthorized access", 401));
+    }
+    if (bookings.length === 0) {
+      return res
+        .status(200)
+        .json({ success: true, message: "no booking data found" });
+    }
+    res.status(200).json({
+      success: true,
+      message: "all bookings fetched",
+      bookings,
+    });
+  } catch (error) {
+    next(new HttpError(error.message, 500));
+  }
+};
+
+export default {
+  add,
+  deleteBooking,
+  getAllBookings,
+  getAllBookingsByServiceId,
+};
