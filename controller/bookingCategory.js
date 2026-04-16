@@ -1,4 +1,5 @@
 import Service from "../model/Service.js";
+import User from "../model/User.js";
 
 import HttpError from "../middleware/HttpError.js";
 import Booking from "../model/Booking.js";
@@ -176,6 +177,41 @@ const getAllBookingsByServiceId = async (req, res, next) => {
     });
   } catch (error) {
     next(new HttpError(error.message, 500));
+  }
+};
+
+const getBookingsByUserId = async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+
+    const user = await User.findOne({ userId });
+    if (!user) {
+      return next(new HttpError("User not found", 404));
+    }
+    const bookings = await Booking.find({ userId }).populate([
+      {
+        path: "serviceId",
+        service: "name price duration notes",
+      },
+      {
+        path: "userId",
+        service: "name email phone",
+      },
+    ]);
+
+    if (bookings.length === 0) {
+      return res
+        .status(200)
+        .json({ success: true, message: "This user has no bookings" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Bookings data fetched successfully",
+      bookings,
+    });
+  } catch (error) {
+    next(new HttpError("internal server error", 500));
   }
 };
 
