@@ -215,9 +215,74 @@ const getBookingsByUserId = async (req, res, next) => {
   }
 };
 
+const ShowAvailableSlots = async (req, res, next) => {
+  try {
+    const { serviceId, bookingDate } = req.query;
+
+    if (!serviceId || !date) {
+      return res.status(400).json({
+        message: "serviceId and booking date are required",
+      });
+    }
+
+    const service = await Service.finDbyId(serviceId);
+
+    if (!service.isActive) {
+      return next(
+        new HttpError(
+          "Service is currently not active, please try again later",
+          400,
+        ),
+      );
+    }
+
+    const allSlots = [
+      "9:00-10:00",
+      "10:00-11:00",
+      "11:00-12:00",
+      "12:00-13:00",
+      "13:00-14:00",
+      "14:00-15:00",
+      "15:00-16:00",
+      "16:00-17:00",
+      "17:00-18:00",
+    ];
+
+    const startOfDay = new Date(bookingDate);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const EndOfDay = new Date(bookingDate);
+    EndOfDay.setHours(24, 59, 59, 999);
+
+    const bookings = await Booking.find({
+      serviceId,
+      bookingDate: { $gte: startOfDay, $lt: EndOfDay },
+      status: { $in: ["pending", "confirmed"] },
+    }).select("timeSlot");
+
+    const bookedSlots = bookings.map((t) => b.timeSlot);
+
+    const availableSlots = allSlots.filter((t) => !bookedSlots.includes(t));
+
+    if (availableSlots.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No Time Slot Available At This Moment",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Available Time Slots : ",
+      availableSlots,
+    });
+  } catch (error) {}
+};
+
 export default {
   add,
   deleteBooking,
   getAllBookings,
   getAllBookingsByServiceId,
+  getBookingsByUserId,
 };
