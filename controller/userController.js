@@ -19,19 +19,28 @@ const generateToken = async (user) => {
 
 const add = async (req, res, next) => {
   try {
-    const { name, email, password, phone, role } = req.body;
+    const { name, email, password, phone, role, services } = req.body;
     const newUser = {
       name,
       email,
       password,
       phone,
       role,
+      services: role === "provider" ? services : [],
       profilePic: req.file?.path,
       cloudinaryId: req.file?.filename,
     };
+
+    if (role === "provider" && (!services || services.length === 0)) {
+      return next(new HttpError("Providers must select services", 400));
+    }
+
     console.log("cloudinaryId", newUser.cloudinaryId);
+
     const user = new User(newUser);
+
     await user.save();
+
     res.status(201).json({ success: true, user });
   } catch (error) {
     next(new HttpError(error.message, 500));

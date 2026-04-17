@@ -10,7 +10,12 @@ import bookingManager from "../controller/bookingCategory.js";
 
 const router = express.Router();
 
-router.post("/create", auth, validate(createBookingSchema), bookingManager.add);
+router.post(
+  "/create",
+  auth,
+  validate(createBookingSchema),
+  bookingManager.addBooking,
+);
 
 router.get("/getAllBookings", auth, bookingManager.getAllBookings);
 
@@ -29,6 +34,6 @@ router.get(
 
 router.get("/getAvailableSlots", auth, bookingManager.ShowAvailableSlots);
 
-router.post("/cancelBooking/:id", auth, bookingManager.deleteBooking);
+router.post("/cancelBooking/:id", auth, bookingManager.cancelBooking);
 
 export default router;

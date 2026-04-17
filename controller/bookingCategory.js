@@ -4,7 +4,7 @@ import User from "../model/User.js";
 import HttpError from "../middleware/HttpError.js";
 import Booking from "../model/Booking.js";
 
-const add = async (req, res, next) => {
+const addBooking = async (req, res, next) => {
   try {
     const { serviceId, bookingDate, timeSlot, notes } = req.body;
 
@@ -25,6 +25,15 @@ const add = async (req, res, next) => {
       );
     }
 
+    const providers = await User.find({
+      role: "provider",
+      services: serviceId,
+    });
+
+    if (!providers.length) {
+      return next(new HttpError("No providers available", 400));
+    }
+
     const startOfDay = new Date(bookingDate);
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -36,7 +45,15 @@ const add = async (req, res, next) => {
       timeSlot,
       bookingDate: { $gte: startOfDay, $lt: endOfDay },
       status: { $in: ["pending", "confirmed"] },
-    });
+    }).distinct("providerId");
+
+    const availableProvider = providers.find(
+      (p) => !bookedProviders.some((bp) => bp.toString() === p._id.toString()),
+    );
+
+    if (!availableProvider) {
+      return next(new HttpError("All providers are busy for this slot", 409));
+    }
 
     if (existingBooking) {
       return next(
@@ -47,6 +64,7 @@ const add = async (req, res, next) => {
     const newBooking = new Booking({
       userId,
       serviceId,
+      providerId: availableProvider._id,
       bookingDate: new Date(bookingDate),
       timeSlot,
       notes,
@@ -58,6 +76,8 @@ const add = async (req, res, next) => {
     await newBooking.populate("serviceId");
 
     await newBooking.populate("userId");
+
+    await newBooking.populate("providerId");
 
     res.status(201).json({
       success: true,
@@ -284,7 +304,7 @@ const ShowAvailableSlots = async (req, res, next) => {
 };
 
 export default {
-  add,
+  addBooking,
   cancelBooking,
   getAllBookings,
   getAllBookingsByServiceId,

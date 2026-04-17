@@ -1,4 +1,6 @@
+import { required } from "joi";
 import mongoose from "mongoose";
+import { type } from "node:os";
 
 const bookingSchema = new mongoose.Schema(
   {
@@ -10,6 +12,11 @@ const bookingSchema = new mongoose.Schema(
     serviceId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Service",
+      required: true,
+    },
+    providerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
     bookingDate: {

@@ -28,6 +28,12 @@ const userSchema = new mongoose.Schema(
       enum: ["customer", "provider", "admin"],
       default: "customer",
     },
+    services: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Service",
+      },
+    ],
     isVerified: {
       type: Boolean,
       default: false,
@@ -55,6 +61,15 @@ userSchema.pre("save", async function () {
   if (user.isModified("password")) {
     user.password = await bcrypt.hash(user.password, 8);
   }
+});
+
+userSchema.pre("save", function (next) {
+  if (this.role === "provider") {
+    if (!this.services || this.services.length === 0) {
+      return next(new Error("Provider must select at least one service"));
+    }
+  }
+  next();
 });
 
 userSchema.statics.findByCredentials = async function (email, password) {

@@ -26,6 +26,12 @@ const serviceSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    providers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   {
     timestamps: true,
