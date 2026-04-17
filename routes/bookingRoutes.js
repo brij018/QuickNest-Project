@@ -27,6 +27,8 @@ router.get(
   bookingManager.getBookingsByUserId,
 );
 
-router.delete("/deleteBooking", auth, bookingManager.deleteBooking);
+router.get("/getAvailableSlots", auth, bookingManager.ShowAvailableSlots);
+
+router.post("/cancelBooking/:id", auth, bookingManager.deleteBooking);
 
 export default router;

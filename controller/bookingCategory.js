@@ -69,7 +69,7 @@ const add = async (req, res, next) => {
   }
 };
 
-const deleteBooking = async (req, res, next) => {
+const cancelBooking = async (req, res, next) => {
   try {
     const bookingId = req.params.id;
     const userId = req.user._id;
@@ -88,11 +88,13 @@ const deleteBooking = async (req, res, next) => {
       return next(new HttpError("Completed bookings cannot be deleted", 400));
     }
 
-    await booking.deleteOne();
+    booking.status = "cancelled";
+
+    await booking.save();
 
     res.status(200).json({
       success: true,
-      message: "Booking deleted successfully",
+      message: "Booking cancelled successfully",
     });
   } catch (error) {
     next(new HttpError(error.message, 500));
@@ -276,13 +278,16 @@ const ShowAvailableSlots = async (req, res, next) => {
       message: "Available Time Slots : ",
       availableSlots,
     });
-  } catch (error) {}
+  } catch (error) {
+    next(new HttpError("Internal server error", 500));
+  }
 };
 
 export default {
   add,
-  deleteBooking,
+  cancelBooking,
   getAllBookings,
   getAllBookingsByServiceId,
   getBookingsByUserId,
+  ShowAvailableSlots,
 };
