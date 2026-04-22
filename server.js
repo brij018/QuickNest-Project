@@ -9,6 +9,7 @@ import HttpError from "./middleware/HttpError.js";
 import userRouter from "./routes/userRoutes.js";
 import adminRouter from "./routes/adminRoutes.js";
 import bookingRouter from "./routes/bookingRoutes.js";
+import providerRouter from "./routes/providerRoutes.js";
 
 const app = express();
 app.use(express.json());
@@ -17,6 +18,7 @@ app.set("view engine", "ejs");
 app.use("/user", userRouter);
 app.use("/admin", adminRouter);
 app.use("/booking", bookingRouter);
+app.use("/provider", bookingRouter);
 
 app.get("/", (req, res) => {
   res.render("home");

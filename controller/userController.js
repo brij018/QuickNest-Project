@@ -1,4 +1,5 @@
 import User from "../model/User.js";
+import Provider from "../model/Provider.js";
 import HttpError from "../middleware/HttpError.js";
 import jwt from "jsonwebtoken";
 import cloudinary from "../config/cloudinary.js";
@@ -19,21 +20,15 @@ const generateToken = async (user) => {
 
 const add = async (req, res, next) => {
   try {
-    const { name, email, password, phone, role, services } = req.body;
+    const { name, email, password, phone } = req.body;
     const newUser = {
       name,
       email,
       password,
       phone,
-      role,
-      services: role === "provider" ? services : [],
       profilePic: req.file?.path,
       cloudinaryId: req.file?.filename,
     };
-
-    if (role === "provider" && (!services || services.length === 0)) {
-      return next(new HttpError("Providers must select services", 400));
-    }
 
     console.log("cloudinaryId", newUser.cloudinaryId);
 
@@ -105,25 +100,33 @@ const allUsers = async (req, res, next) => {
 
 const deleteUser = async (req, res, next) => {
   try {
-    const targetedUser = req.params.id || req.user._id;
+    const targetedUserId = req.params.id || req.user._id;
 
-    const user = await User.findById(targetedUser);
+    const user = await User.findById(targetedUserId);
     if (!user) {
-      return next(new HttpError("user not found", 404));
+      return next(new HttpError("User not found", 404));
     }
+
     if (
       req.user.role !== "admin" &&
       req.user._id.toString() !== user._id.toString()
     ) {
-      return next(new HttpError("unauthorized access", 401));
+      return next(new HttpError("Unauthorized access", 401));
     }
-    await User.deleteOne(user);
+
+    if (user.role === "provider") {
+      await Provider.findOneAndDelete({ userId: user._id });
+    }
+
     if (user.cloudinaryId) {
       await cloudinary.uploader.destroy(user.cloudinaryId);
     }
+
+    await User.deleteOne({ _id: user._id });
+
     res
       .status(200)
-      .json({ success: true, message: "user deleted successfully" });
+      .json({ success: true, message: "User deleted successfully" });
   } catch (error) {
     next(new HttpError(error.message, 500));
   }
@@ -131,23 +134,13 @@ const deleteUser = async (req, res, next) => {
 
 const update = async (req, res, next) => {
   try {
-    const targetedUser = req.user._id || req.params.id;
-    const user = await User.findById(targetedUser);
+    const targetedUserId = req.params.id || req.user._id;
+
+    const user = await User.findById(targetedUserId);
     if (!user) {
-      return next(new HttpError("user not found", 404));
-    }
-    const updates = Object.keys(req.body);
-
-    const allowedFields = ["name", "password", "phone", "profilePic"];
-    if (req.user.role === "admin") {
-      allowedFields = [...allowedFields, "role", "isVerified"];
+      return next(new HttpError("User not found", 404));
     }
 
-    const isValid = updates.every((field) => allowedFields.includes(field));
-
-    if (!isValid) {
-      return next(new HttpError("only allowed field can be updated", 400));
-    }
     if (
       req.user.role !== "admin" &&
       req.user._id.toString() !== user._id.toString()
@@ -155,7 +148,24 @@ const update = async (req, res, next) => {
       return next(new HttpError("unauthorized access", 401));
     }
 
-    updates.forEach((update) => (user[update] = req.body[update]));
+    let allowedUserFields = ["name", "password", "phone", "profilePic"];
+    if (req.user.role === "admin") {
+      allowedUserFields = [...allowedUserFields, "role", "isVerified"];
+    }
+    const { services, ...userBodyFields } = req.body;
+    const userUpdates = Object.keys(userBodyFields);
+
+    const invalidUserFields = userUpdates.filter(
+      (field) => !allowedUserFields.includes(field),
+    );
+
+    if (invalidUserFields.length > 0) {
+      return next(
+        new HttpError(`Invalid field(s): ${invalidUserFields.join(", ")}`, 400),
+      );
+    }
+
+    userUpdates.forEach((field) => (user[field] = userBodyFields[field]));
 
     if (req.file) {
       if (user.cloudinaryId) {
@@ -167,9 +177,32 @@ const update = async (req, res, next) => {
 
     await user.save();
 
-    res
-      .status(200)
-      .json({ success: true, message: "user Data updated successfully", user });
+    let updateProvider = null;
+
+    if (services !== undefined) {
+      if (user.role !== "provider") {
+        return next(new HttpError("Only providers can update services", 403));
+      }
+      if (!Array.isArray(services) || services.length === 0) {
+        return next(new HttpError("Services must be a non-empty array", 400));
+      }
+      updatedProvider = await Provider.findOneAndUpdate(
+        { userId: user._id },
+        { services },
+        { new: true, runValidators: true },
+      );
+
+      if (!updatedProvider) {
+        return next(new HttpError("Provider profile not found", 404));
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "user Data updated successfully",
+      user,
+      ...(updatedProvider && { provider: updatedProvider }),
+    });
   } catch (error) {
     next(new HttpError(error.message, 500));
   }

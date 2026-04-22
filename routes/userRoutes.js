@@ -39,6 +39,6 @@ router.patch(
   validate(updateUserSchema),
   userManager.update,
 );
-router.delete("/delete", auth, userManager.deleteUser);
+router.delete("/delete/:id", auth, userManager.deleteUser);
 
 export default router;

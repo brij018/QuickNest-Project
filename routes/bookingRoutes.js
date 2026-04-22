@@ -11,7 +11,7 @@ import bookingManager from "../controller/bookingCategory.js";
 const router = express.Router();
 
 router.post(
-  "/create",
+  "/createBooking",
   auth,
   validate(createBookingSchema),
   bookingManager.addBooking,
